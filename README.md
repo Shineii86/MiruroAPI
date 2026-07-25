@@ -1,3 +1,6 @@
+> [!NOTE]
+> **API MAYBE Temporarily Paused** due to suspiciously too many requests. My hosted version of this API is only for testing purposes. You MUST host your own instance to use the API.
+
 <div align="center">
   
   <img src="https://capsule-render.vercel.app/api?type=waving&height=300&color=gradient&text=𝙈𝙞𝙧𝙪𝙧𝙤𝘼𝙋𝙄&fontAlignY=30&fontSize=100&desc=𝖠%20𝖢𝗈𝗆𝗉𝗅𝖾𝗍𝖾%20𝖱𝖤𝖲𝖳𝖿𝗎𝗅%20𝖠𝖯𝖨%20𝖥𝗈𝗋%20𝖠𝗇𝗂𝗆𝖾%20𝖲𝗍𝗋𝖾𝖺𝗆𝗂𝗇𝗀&descSize=25" />
