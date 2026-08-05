@@ -1,0 +1,22 @@
+name = "miruroapi"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Cloudflare Worker configuration for MiruroAPI
+# Deploy with: wrangler deploy
+
+# Environment variables (set via wrangler secret put or dashboard)
+# SCRAPER_API_KEY = ""    # ScraperAPI premium key (optional, $49/mo)
+# FLARESOLVERR_URL = ""   # FlareSolverr Docker instance URL (optional)
+
+# Route configuration (optional — for custom domains)
+# routes = [
+#   { pattern = "api.your-domain.com/api/*", zone_name = "your-domain.com" }
+# ]
+
+# Limits
+[limits]
+cpu_ms = 30000
+
+# Compatibility flags
+compatibility_flags = ["nodejs_compat"]

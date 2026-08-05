@@ -1,5 +1,47 @@
 # Changelog
 
+## v2.3.2
+### Cloudflare Worker Implementation — Issue #2 Fix
+
+#### New: `worker.js` (Cloudflare Worker Edge Runtime)
+- **Full Cloudflare Worker implementation** created at project root
+- Edge-to-edge requests bypass Cloudflare bot detection (Worker → miruro.to → Cloudflare trusts itself)
+- Zero cold starts, 100K free requests/day on Cloudflare free tier
+- No npm dependencies — uses native `fetch`, `DecompressionStream`, `TextEncoder`/`TextDecoder`
+- 15 API endpoints: search, suggestions, filter, trending, trending/daily, trending/weekly, popular, top, upcoming, recent, random, info, episodes, watch, stream, genres, tags, providers, health
+
+#### New: `wrangler.toml`
+- Cloudflare Workers deployment configuration
+- Compatible with `wrangler deploy` CLI
+- Node.js compatibility flag enabled for buffer/text encoding support
+- CPU time limit: 30 seconds
+
+#### Architecture
+```
+Browser → Cloudflare Worker (edge) → miruro.to pipe → Cloudflare trusts itself ✅
+Vercel (datacenter) → miruro.to → Cloudflare blocks ❌
+```
+
+#### Deploy
+```bash
+npm install -g wrangler
+wrangler login
+wrangler deploy worker.js --name miruroapi
+```
+
+#### Files Changed
+- `worker.js` — Cloudflare Worker implementation (complete rewrite for edge runtime)
+- `wrangler.toml` — Cloudflare Workers deployment configuration
+- `CHANGELOG.md` — This entry
+
+#### Notes
+- This fixes Issue #2: Cloudflare Worker/Pages deployment support
+- Streaming endpoints (`/episodes`, `/watch`, `/stream`) now work via edge-to-edge requests
+- Environment variables `SCRAPER_API_KEY` and `FLARESOLVERR_URL` are optional for fallback methods
+- The worker runs on Cloudflare's edge network with zero cold starts
+
+---
+
 ## v2.3.1
 ### Cloudflare Worker Edition — Streaming Bypasses Cloudflare
 

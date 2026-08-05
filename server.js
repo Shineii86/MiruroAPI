@@ -301,7 +301,7 @@ app.use((req, res) => {
 
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`[${new Date().toISOString()}] MiruroAPI v2.3.0 listening at ${PORT}`);
+    console.log(`[${new Date().toISOString()}] MiruroAPI v2.3.2 listening at ${PORT}`);
   });
 }
 
