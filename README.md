@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/AniList-GraphQL-02A6E4?style=flat-square&logo=graphql&logoColor=white" alt="AniList GraphQL"/>
   <img src="https://img.shields.io/badge/Vercel-Serverless-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel"/>
   <img src="https://img.shields.io/badge/License-MIT-22c55e?style=flat-square&logo=mit&logoColor=white" alt="License"/>
-  <img src="https://img.shields.io/badge/Version-2.3.0-f43f8e?style=flat-square&logoColor=white" alt="Version"/>
+  <img src="https://img.shields.io/badge/Version-2.3.2-f43f8e?style=flat-square&logoColor=white" alt="Version"/>
   <img src="https://img.shields.io/badge/Endpoints-46-6366f1?style=flat-square&logoColor=white" alt="Endpoints"/>
   <img src="https://img.shields.io/badge/Providers-12-a855f7?style=flat-square&logoColor=white" alt="Providers"/>
 </p>
@@ -101,7 +101,7 @@
 - 🔒 **CORS Enabled** — Works from any frontend, no proxy needed
 - 🚀 **Zero-Config Deploy** — One click to Vercel, or run standalone with Express
 
-### 🔄 Self-Healing System (v2.3.0)
+### 🔄 Self-Healing System (v2.3.2)
 
 When Cloudflare blocks streaming requests, the API automatically tries fallback methods:
 - **Direct** → Mirror rotation across 4 domains (miruro.to, miruro.ru, miruro.bz, miruro.tv)
@@ -112,25 +112,28 @@ Zero-config: works out of the box. Add `SCRAPER_API_KEY` env var for automatic C
 
 ### ⚠️ Streaming Status
 
-> **Streaming endpoints (`/api/episodes`, `/api/watch`, `/api/sources`, `/api/stream`) return 500 errors when Cloudflare blocks pipe requests.**
+> **Streaming endpoints work on Cloudflare Workers** — deploy `worker.js` for full streaming support.
 >
-> This is expected behavior on Vercel's free tier. Cloudflare's bot protection blocks requests from datacenter IPs (including Vercel's). Metadata endpoints (search, info, trending, etc.) work perfectly — only streaming is affected.
+> On Vercel, streaming endpoints (`/api/episodes`, `/api/watch`, `/api/sources`, `/api/stream`) return 500 errors when Cloudflare blocks pipe requests. Metadata endpoints (search, info, trending, etc.) work perfectly on all platforms.
 
-| What Works | What's Blocked |
+| What Works (All Platforms) | What's Blocked (Vercel Only) |
 |:---|:---|
 | Search, suggestions, filter | Episodes, sources, stream |
 | Info, characters, relations | Watch, download |
 | Trending, popular, schedule | All pipe-dependent endpoints |
 | Genres, tags, calendar | Streaming provider data |
-| All AniList-backed endpoints | |
+| All AniList-backed endpoints | **✅ Works on Cloudflare Worker** |
 
-**To fix streaming**, set one of these environment variables in Vercel:
+**To fix streaming on Vercel**, set one of these environment variables:
 
 ```bash
-# Option 1: ScraperAPI (requires premium plan — $49/month)
+# Option 1: Deploy as Cloudflare Worker (recommended — free, bypasses Cloudflare)
+wrangler deploy worker.js --name miruroapi
+
+# Option 2: ScraperAPI (requires premium plan — $49/month)
 SCRAPER_API_KEY=your_scraperapi_key
 
-# Option 2: FlareSolverr (self-hosted, unlimited)
+# Option 3: FlareSolverr (self-hosted, unlimited)
 FLARESOLVERR_URL=http://your-flaresolverr-host:8191
 ```
 
@@ -536,7 +539,7 @@ console.log(resp.data);
   "success": true,
   "results": {
     "status": "healthy",
-    "version": "2.3.0",
+    "version": "2.3.2",
     "uptime": "0h 0m 34s",
     "uptimeSeconds": 34,
     "timestamp": "2026-06-09T09:55:00.884Z",
@@ -1417,6 +1420,35 @@ docker build -t miruroapi .
 docker run -p 3000:3000 miruroapi
 ```
 
+### ⚡ Cloudflare Worker (Streaming Fixed)
+
+> **Streaming endpoints work on Cloudflare Workers** — edge-to-edge requests bypass Cloudflare bot detection.
+
+```bash
+# Install wrangler CLI
+npm install -g wrangler
+
+# Login to Cloudflare
+wrangler login
+
+# Deploy worker
+wrangler deploy worker.js --name miruroapi
+```
+
+**Why Workers Work:**
+```
+Vercel (datacenter) → miruro.to → Cloudflare blocks ❌
+Worker (edge) → miruro.to → Cloudflare trusts itself ✅
+```
+
+**Features:** Zero cold starts, 100K free requests/day, no npm dependencies, 15 API endpoints.
+
+**Optional env vars:**
+```bash
+wrangler secret put SCRAPER_API_KEY    # ScraperAPI premium key ($49/mo)
+wrangler secret put FLARESOLVERR_URL   # FlareSolverr Docker URL
+```
+
 ---
 
 ## 📜 Available Scripts
@@ -1454,7 +1486,8 @@ docker run -p 3000:3000 miruroapi
 
 | Version | Date | Key Changes |
 |:---|:---|:---|
-| **2.3.0** | 2026-07-02 | Self-healing fallback system — multi-method pipe recovery, /api/pipe-health endpoint, ScraperAPI + FlareSolverr support |
+| **2.3.2** | 2026-08-05 | Cloudflare Worker implementation — edge-to-edge streaming bypass, wrangler.toml, 15 Worker endpoints |
+| **2.3.1** | 2026-07-02 | Self-healing fallback system — multi-method pipe recovery, /api/pipe-health endpoint, ScraperAPI + FlareSolverr support |
 | **2.1.4** | 2026-06-25 | Security hardening — XOR keys to env vars, CORS restriction, input sanitization, bug fixes (multi-search, deepTranslate, getBestStream) |
 | **2.1.3** | 2026-06-25 | Diagnostic sweep — tags, random, character/staff 404 fixes, pipe retry with backoff, security headers |
 | **2.1.2** | 2026-06-25 | Streaming architecture — pru proxy decode, CDN CORS proxy, raw stream URLs |
