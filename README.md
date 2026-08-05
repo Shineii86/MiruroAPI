@@ -112,28 +112,25 @@ Zero-config: works out of the box. Add `SCRAPER_API_KEY` env var for automatic C
 
 ### ⚠️ Streaming Status
 
-> **Streaming endpoints work on Cloudflare Workers** — deploy `worker.js` for full streaming support.
+> **Streaming endpoints (`/api/episodes`, `/api/watch`, `/api/sources`, `/api/stream`) return 500 errors when Cloudflare blocks pipe requests.**
 >
-> On Vercel, streaming endpoints (`/api/episodes`, `/api/watch`, `/api/sources`, `/api/stream`) return 500 errors when Cloudflare blocks pipe requests. Metadata endpoints (search, info, trending, etc.) work perfectly on all platforms.
+> This is expected behavior on Vercel's free tier. Cloudflare's bot protection blocks requests from datacenter IPs (including Vercel's). Metadata endpoints (search, info, trending, etc.) work perfectly — only streaming is affected.
 
-| What Works (All Platforms) | What's Blocked (Vercel Only) |
+| What Works | What's Blocked |
 |:---|:---|
 | Search, suggestions, filter | Episodes, sources, stream |
 | Info, characters, relations | Watch, download |
 | Trending, popular, schedule | All pipe-dependent endpoints |
 | Genres, tags, calendar | Streaming provider data |
-| All AniList-backed endpoints | **✅ Works on Cloudflare Worker** |
+| All AniList-backed endpoints | |
 
-**To fix streaming on Vercel**, set one of these environment variables:
+**To fix streaming**, set one of these environment variables in Vercel:
 
 ```bash
-# Option 1: Deploy as Cloudflare Worker (recommended — free, bypasses Cloudflare)
-wrangler deploy worker.js --name miruroapi
-
-# Option 2: ScraperAPI (requires premium plan — $49/month)
+# Option 1: ScraperAPI (requires premium plan — $49/month)
 SCRAPER_API_KEY=your_scraperapi_key
 
-# Option 3: FlareSolverr (self-hosted, unlimited)
+# Option 2: FlareSolverr (self-hosted, unlimited)
 FLARESOLVERR_URL=http://your-flaresolverr-host:8191
 ```
 
@@ -1420,9 +1417,10 @@ docker build -t miruroapi .
 docker run -p 3000:3000 miruroapi
 ```
 
-### ⚡ Cloudflare Worker (Streaming Fixed)
+### ⚡ Cloudflare Worker (Experimental)
 
-> **Streaming endpoints work on Cloudflare Workers** — edge-to-edge requests bypass Cloudflare bot detection.
+> **Cloudflare Worker implementation** — runs the API on Cloudflare's edge network.
+> Streaming endpoints *may* work via edge-to-edge requests, but this is **untested and not guaranteed**.
 
 ```bash
 # Install wrangler CLI
@@ -1435,11 +1433,7 @@ wrangler login
 wrangler deploy worker.js --name miruroapi
 ```
 
-**Why Workers Work:**
-```
-Vercel (datacenter) → miruro.to → Cloudflare blocks ❌
-Worker (edge) → miruro.to → Cloudflare trusts itself ✅
-```
+**Theory:** Cloudflare Workers run on Cloudflare's edge, so requests to `miruro.to` *should* be trusted (edge-to-edge). However, this has not been verified in production.
 
 **Features:** Zero cold starts, 100K free requests/day, no npm dependencies, 15 API endpoints.
 
