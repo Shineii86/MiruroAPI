@@ -1,7 +1,16 @@
 # Changelog
 
 ## v2.3.3
-### Issue #3 Fix — API Stability, Error Handling & New Endpoints
+### Issue #3 Fix — API Stability, Direct Embed Providers & Error Handling
+
+#### New: Direct Embed Providers (bypasses Cloudflare entirely)
+- **`megavid.buzz`** — Direct video embed, no scraping needed
+- **`anixo.buzz`** — Direct video embed, CORS-friendly
+- Added `GET /api/embed/:anilistId/:episode` — Returns embed URLs for all providers
+- Added `GET /api/embed/:anilistId/:episode/:provider` — Returns embed URL for specific provider
+- Added `GET /api/embed-providers` — Lists all available embed providers
+- These endpoints return URLs that can be embedded directly in an iframe — **no Cloudflare blocking**
+- Supports `lang=sub|dub` and optional `malId` query params
 
 #### Fixed: Streaming Endpoint Error Handling
 - **Cloudflare detection** — Streaming endpoints (`/episodes`, `/stream`, `/watch`, `/download`, `/sources`) now return proper `503` status codes with descriptive error messages when Cloudflare blocks requests
@@ -25,9 +34,11 @@
 
 #### Changed: Version Bump
 - All version references updated from `2.3.2` to `2.3.3`
+- Endpoint count updated from 46 to 49 (3 new embed routes)
 
 #### Files Changed
-- `src/routes/apiRoutes.js` — Added `/sources/:id` route, improved error handling for all streaming endpoints, updated OpenAPI spec
+- `src/helpers/pipe.js` — Added EMBED_PROVIDERS config, getEmbedUrl(), getEmbedUrls()
+- `src/routes/apiRoutes.js` — Added /embed, /embed-providers routes, improved error handling, updated OpenAPI spec
 - `src/helpers/pipe.js` — Better timeout handling, Cloudflare detection, informative error messages
 - `server.js` — Updated CORS headers, version bump
 - `package.json` — Version bump to 2.3.3
@@ -42,6 +53,7 @@
 - [x] Fix `/api/episodes/:id` — Improved error handling, proper 503 on Cloudflare blocks
 - [x] Fix `/api/sources` — Added `/api/sources/:id` path-based endpoint
 - [x] Fix `/api/watch` — Improved error handling with Cloudflare detection
+- [x] **NEW: Direct embed providers** — megavid.buzz + anixo.buzz bypass Cloudflare entirely
 - [x] Consistent JSON responses — All endpoints return `{ success, results/message }`
 - [x] Proper 400/404 responses — Input validation for invalid IDs and missing params
 - [x] Error handling — Timeouts, Cloudflare blocks, upstream failures handled gracefully
@@ -49,8 +61,9 @@
 
 #### Notes
 - AniList-based endpoints (search, info, trending, filter, etc.) are fully functional
-- Streaming endpoints depend on miruro.to pipe availability — Cloudflare may still block from datacenters
-- For reliable streaming, deploy on Cloudflare Workers (worker.js) or configure SCRAPER_API_KEY/FLARESOLVERR_URL
+- **Direct embed providers (`/api/embed`) work from anywhere** — no Cloudflare blocking
+- Pipe-based endpoints may still be blocked from datacenters — use `/api/embed` instead
+- For Cloudflare-protected pipe, configure SCRAPER_API_KEY/FLARESOLVERR_URL as fallback
 
 ---
 

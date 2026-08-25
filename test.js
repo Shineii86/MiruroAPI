@@ -93,6 +93,12 @@ const tests = [
   { name: "Genre Stats", url: "/stats/genre" },
   { name: "Calendar", url: "/calendar" },
   { name: "Timeline", url: "/timeline/20" },
+
+  // ---- FEATURE: Direct embed endpoints (no scraping) ----
+  { name: "Embed All Providers", url: "/embed/20/1?lang=sub" },
+  { name: "Embed Megavid", url: "/embed/20/1/megavid?lang=sub" },
+  { name: "Embed AniXo", url: "/embed/20/1/anixo?lang=sub" },
+  { name: "Embed Providers List", url: "/embed-providers" },
 ];
 
 // ══════════════════════════════════════════════════════════════

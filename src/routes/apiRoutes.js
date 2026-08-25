@@ -813,6 +813,85 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
   });
 
   // ══════════════════════════════════════════════════════════════
+  // DIRECT EMBED PROVIDERS (no scraping — bypasses Cloudflare)
+  // ══════════════════════════════════════════════════════════════
+
+  // ---- FEATURE: Direct embed URLs for all providers ----
+  router.get("/embed/:anilistId/:episode", (req, res) => {
+    try {
+      const anilistId = parseInt(req.params.anilistId);
+      const episode = parseInt(req.params.episode);
+      if (isNaN(anilistId) || anilistId <= 0) return jsonError(res, "Invalid AniList ID", 400);
+      if (isNaN(episode) || episode <= 0) return jsonError(res, "Invalid episode number", 400);
+
+      const { lang = "sub", malId } = req.query;
+      const validLangs = ["sub", "dub"];
+      if (!validLangs.includes(lang)) return jsonError(res, "lang must be 'sub' or 'dub'", 400);
+
+      const embeds = pipe.getEmbedUrls(anilistId, episode, lang, malId ? parseInt(malId) : null);
+
+      jsonResponse(res, {
+        anilistId,
+        episode,
+        lang,
+        providers: embeds,
+        total: embeds.length,
+        description: "Direct embed URLs — embed in an iframe to watch. No scraping required.",
+      });
+    } catch (err) {
+      jsonError(res, err.message, 500);
+    }
+  });
+
+  // ---- FEATURE: Direct embed URL for specific provider ----
+  router.get("/embed/:anilistId/:episode/:provider", (req, res) => {
+    try {
+      const anilistId = parseInt(req.params.anilistId);
+      const episode = parseInt(req.params.episode);
+      const providerId = req.params.provider;
+      if (isNaN(anilistId) || anilistId <= 0) return jsonError(res, "Invalid AniList ID", 400);
+      if (isNaN(episode) || episode <= 0) return jsonError(res, "Invalid episode number", 400);
+
+      const { lang = "sub", malId } = req.query;
+      const validLangs = ["sub", "dub"];
+      if (!validLangs.includes(lang)) return jsonError(res, "lang must be 'sub' or 'dub'", 400);
+
+      const url = pipe.getEmbedUrl(providerId, anilistId, episode, lang, malId ? parseInt(malId) : null);
+      if (!url) return jsonError(res, `Unknown provider: ${providerId}. Available: megavid, anixo`, 404);
+
+      const provider = pipe.EMBED_PROVIDERS.find((p) => p.id === providerId);
+
+      jsonResponse(res, {
+        anilistId,
+        episode,
+        lang,
+        provider: providerId,
+        name: provider.name,
+        url,
+        cors: provider.cors,
+        description: "Embed this URL in an iframe to watch. No scraping required.",
+      });
+    } catch (err) {
+      jsonError(res, err.message, 500);
+    }
+  });
+
+  // ---- FEATURE: List all available embed providers ----
+  router.get("/embed-providers", (req, res) => {
+    jsonResponse(res, {
+      providers: pipe.EMBED_PROVIDERS.map((p) => ({
+        id: p.id,
+        name: p.name,
+        cors: p.cors,
+        example: p.makeUrl(20, 1, "sub"),
+      })),
+      total: pipe.EMBED_PROVIDERS.length,
+      usage: "GET /api/embed/:anilistId/:episode?lang=sub",
+      description: "Direct embed providers — bypass Cloudflare by embedding video URLs directly in an iframe.",
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════
   // UTILITY FEATURES
   // ══════════════════════════════════════════════════════════════
 
@@ -1178,8 +1257,9 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
           size: require("../helpers/cache").getCacheSize(),
           maxSize: 100,
         },
-        endpoints: 46,
+        endpoints: 49,
         providers: ["kiwi", "pewe", "bee", "bonk", "bun", "ally", "nun", "twin", "cog", "moo", "hop", "telli"],
+        embedProviders: ["megavid", "anixo"],
       },
     });
   });
@@ -1242,7 +1322,8 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
           currentSize: require("../helpers/cache").getCacheSize(),
           description: "Map-based cache with TTL expiration and FIFO eviction",
         },
-        endpoints: 46,
+        endpoints: 49,
+        embedProviders: 2,
         timestamp: new Date().toISOString(),
       },
     });
@@ -1304,6 +1385,9 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
         "/calendar": { get: { summary: "Monthly calendar", tags: ["Utility"] } },
         "/timeline/{id}": { get: { summary: "Anime timeline", tags: ["Utility"] } },
         "/providers": { get: { summary: "Provider capabilities", tags: ["System"] } },
+        "/embed/{anilistId}/{episode}": { get: { summary: "Direct embed URLs (all providers)", tags: ["Streaming & Downloading"] } },
+        "/embed/{anilistId}/{episode}/{provider}": { get: { summary: "Direct embed URL (specific provider)", tags: ["Streaming & Downloading"] } },
+        "/embed-providers": { get: { summary: "List embed providers", tags: ["System"] } },
         "/health": { get: { summary: "Health check", tags: ["System"] } },
         "/stats": { get: { summary: "API statistics", tags: ["System"] } },
         "/openapi": { get: { summary: "OpenAPI spec", tags: ["System"] } },

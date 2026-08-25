@@ -592,6 +592,46 @@ const getBatchSources = async (provider, anilistId, category, slugs) => {
   };
 };
 
+// ══════════════════════════════════════════════════════════════
+// DIRECT EMBED PROVIDERS (bypass Cloudflare — no scraping needed)
+// ══════════════════════════════════════════════════════════════
+
+const EMBED_PROVIDERS = [
+  {
+    id: "megavid",
+    name: "Megavid",
+    cors: false,
+    makeUrl(anilistId, episode, lang = "sub", malId = null) {
+      const idType = malId ? "mal" : "ani";
+      const id = malId || anilistId;
+      return `https://megavid.buzz/${idType}/${id}/${episode}/${lang}?autoplay=true`;
+    },
+  },
+  {
+    id: "anixo",
+    name: "AniXo",
+    cors: true,
+    makeUrl(anilistId, episode, lang = "sub") {
+      return `https://anixo.buzz/embed/ani/${anilistId}/${episode}/${lang}?autoplay=true`;
+    },
+  },
+];
+
+const getEmbedUrl = (providerId, anilistId, episode, lang = "sub", malId = null) => {
+  const provider = EMBED_PROVIDERS.find((p) => p.id === providerId);
+  if (!provider) return null;
+  return provider.makeUrl(anilistId, episode, lang, malId);
+};
+
+const getEmbedUrls = (anilistId, episode, lang = "sub", malId = null) => {
+  return EMBED_PROVIDERS.map((p) => ({
+    id: p.id,
+    name: p.name,
+    cors: p.cors,
+    url: p.makeUrl(anilistId, episode, lang, malId),
+  }));
+};
+
 module.exports = {
   getEpisodes,
   getSources,
@@ -607,6 +647,9 @@ module.exports = {
   deepTranslate,
   injectSourceSlugs,
   pipeHealthCheck,
+  EMBED_PROVIDERS,
+  getEmbedUrl,
+  getEmbedUrls,
 };
 
 // ══════════════════════════════════════════════════════════════ END: pipe.js
