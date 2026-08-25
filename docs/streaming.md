@@ -5,10 +5,36 @@ This guide explains how to get streaming URLs from MiruroAPI in 3 steps.
 ## Overview
 
 ```
-Step 1: Get Episodes       →  /api/episodes/:anilistId
-Step 2: Get Stream URLs    →  /api/watch/:provider/:anilistId/:category/:slug
-Step 3: Play M3U8          →  Use HLS player
+Option A (Pipe-based — may be Cloudflare-blocked):
+  Step 1: Get Episodes       →  /api/episodes/:anilistId
+  Step 2: Get Stream URLs    →  /api/watch/:provider/:anilistId/:category/:slug
+  Step 3: Play M3U8          →  Use HLS player
+
+Option B (Direct embed — no Cloudflare blocking):
+  Step 1: Get Embed URLs     →  /api/embed/:anilistId/:episode
+  Step 2: Embed in iframe    →  <iframe src="..."></iframe>
 ```
+
+---
+
+## Alternative: Direct Embed (Recommended)
+
+If pipe-based streaming is blocked by Cloudflare, use direct embed providers instead:
+
+```bash
+# Step 1: Get embed URLs for all providers
+curl "https://mirurotvapi.vercel.app/api/embed/20/1?lang=sub"
+
+# Step 2: Embed the URL in an iframe
+<iframe src="https://anixo.buzz/embed/ani/20/1/sub" allow="autoplay; fullscreen"></iframe>
+```
+
+| Provider | URL Pattern | CORS |
+|----------|-------------|------|
+| Megavid | `megavid.buzz/ani/{id}/{ep}/{lang}` | No |
+| AniXo | `anixo.buzz/embed/ani/{id}/{ep}/{lang}` | Yes |
+
+This approach bypasses Cloudflare entirely — no scraping, no proxy, works from any environment.
 
 ---
 

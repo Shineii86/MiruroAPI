@@ -22,15 +22,15 @@
   <img src="https://img.shields.io/badge/AniList-GraphQL-02A6E4?style=flat-square&logo=graphql&logoColor=white" alt="AniList GraphQL"/>
   <img src="https://img.shields.io/badge/Vercel-Serverless-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel"/>
   <img src="https://img.shields.io/badge/License-MIT-22c55e?style=flat-square&logo=mit&logoColor=white" alt="License"/>
-  <img src="https://img.shields.io/badge/Version-2.3.2-f43f8e?style=flat-square&logoColor=white" alt="Version"/>
-  <img src="https://img.shields.io/badge/Endpoints-46-6366f1?style=flat-square&logoColor=white" alt="Endpoints"/>
-  <img src="https://img.shields.io/badge/Providers-12-a855f7?style=flat-square&logoColor=white" alt="Providers"/>
+  <img src="https://img.shields.io/badge/Version-2.3.3-f43f8e?style=flat-square&logoColor=white" alt="Version"/>
+  <img src="https://img.shields.io/badge/Endpoints-49-6366f1?style=flat-square&logoColor=white" alt="Endpoints"/>
+  <img src="https://img.shields.io/badge/Providers-14-a855f7?style=flat-square&logoColor=white" alt="Providers"/>
 </p>
 
 <p align="center">
   <b>A complete RESTful API for anime streaming data powered by AniList GraphQL and Miruro providers</b><br/>
   Search, browse, filter, watch — every endpoint returns fresh data with smart caching.<br/>
-  46 endpoints, 12 streaming providers, M3U8 URLs with subtitles, skip timestamps, and batch operations.
+  49 endpoints, 14 streaming providers (12 pipe + 2 direct embed), M3U8 URLs with subtitles, skip timestamps, and batch operations.
 </p>
 
 <p align="center">
@@ -87,13 +87,13 @@
 
 ### Why MiruroAPI?
 
-- 🎬 **46 Endpoints** — Complete anime data coverage
+- 🎬 **49 Endpoints** — Complete anime data coverage
 - 🔍 **Full-Text Search** — Search anime by keyword with suggestions
 - 🎭 **Characters & Voice Actors** — Full character data from AniList
 - 🎯 **Advanced Filtering** — Genre, year, season, format, sort
 - 🏆 **Trending & Popular** — Discover what's hot right now
 - 📅 **Airing Schedule** — See what's airing on any date
-- 📡 **12 Streaming Providers** — M3U8 streaming sources
+- 📡 **14 Streaming Providers** — M3U8 streaming sources
 - ⏭️ **Skip Timestamps** — OP/ED skip data
 - 🎭 **Character & Staff Search** — Search characters and staff by name
 - 🎬 **Batch Episodes** — Fetch multiple episode sources in parallel
@@ -110,18 +110,35 @@ When Cloudflare blocks streaming requests, the API automatically tries fallback 
 
 Zero-config: works out of the box. Add `SCRAPER_API_KEY` env var for automatic Cloudflare bypass (requires ScraperAPI premium plan for protected domains).
 
+### Direct Embed Providers (v2.3.3)
+
+Bypass Cloudflare entirely with direct embed URLs from third-party providers — no scraping needed:
+
+- **Megavid** (`megavid.buzz`) — Direct video embed
+- **AniXo** (`anixo.buzz`) — Direct video embed, CORS-friendly
+
+```bash
+# Get embed URLs for all providers
+curl "https://mirurotvapi.vercel.app/api/embed/20/1?lang=sub"
+
+# Get embed URL for specific provider
+curl "https://mirurotvapi.vercel.app/api/embed/20/1/anixo?lang=sub"
+```
+
+These return iframe-ready URLs that work from any environment — no Cloudflare blocking.
+
 ### ⚠️ Streaming Status
 
 > **Streaming endpoints (`/api/episodes`, `/api/watch`, `/api/sources`, `/api/stream`) return 500 errors when Cloudflare blocks pipe requests.**
 >
 > This is expected behavior on Vercel's free tier. Cloudflare's bot protection blocks requests from datacenter IPs (including Vercel's). Metadata endpoints (search, info, trending, etc.) work perfectly — only streaming is affected.
 
-| What Works | What's Blocked |
+| What Works | What's Blocked (pipe-based) |
 |:---|:---|
-| Search, suggestions, filter | Episodes, sources, stream |
-| Info, characters, relations | Watch, download |
-| Trending, popular, schedule | All pipe-dependent endpoints |
-| Genres, tags, calendar | Streaming provider data |
+| Search, suggestions, filter | Episodes via pipe (503) |
+| Info, characters, relations | Stream/download via pipe (503) |
+| Trending, popular, schedule | Watch via pipe (503) |
+| **NEW: /api/embed (direct embeds)** | |
 | All AniList-backed endpoints | |
 
 **To fix streaming**, set one of these environment variables in Vercel:
@@ -146,7 +163,8 @@ flowchart TD
     C -- MISS --> E{"🔍 Which Source?"}
 
     E -- Metadata --> F["📡 AniList GraphQL<br/>graphql.anilist.co"]
-    E -- Streaming --> G["📺 Miruro Pipe<br/>miruro.{to,ru,bz,tv}/api/secure/pipe"]
+    E -- Streaming (pipe) --> G["📺 Miruro Pipe<br/>miruro.{to,ru,bz,tv}/api/secure/pipe"]
+    E -- Streaming (embed) --> E2["🎬 Direct Embed<br/>megavid.buzz / anixo.buzz"]
 
     F --> H["AniList Response<br/>JSON"]
     G --> I["Pipe Response<br/>base64url + gzip"]
@@ -161,6 +179,7 @@ flowchart TD
     style E fill:#1e1e2e,stroke:#a855f7,color:#f1f5f9
     style F fill:#1e1e2e,stroke:#06b6d4,color:#f1f5f9
     style G fill:#1e1e2e,stroke:#eab308,color:#f1f5f9
+    style E2 fill:#1e1e2e,stroke:#22c55e,color:#f1f5f9
     style H fill:#1e1e2e,stroke:#06b6d4,color:#f1f5f9
     style I fill:#1e1e2e,stroke:#eab308,color:#f1f5f9
     style J fill:#1e1e2e,stroke:#22c55e,color:#f1f5f9
@@ -178,7 +197,7 @@ flowchart TD
 - **AniList GraphQL** for rich metadata
 - **Miruro pipe** for streaming sources
 - **Smart caching** with configurable TTL
-- **46 RESTful endpoints**
+- **49 RESTful endpoints**
 - **Gzip compression** — 30-70% smaller responses
 - **Request logging** — method, path, status, duration
 - **Graceful error handling** per endpoint
@@ -211,6 +230,7 @@ flowchart TD
 - **Sub/Dub** support per provider
 - **Codec and fansub** metadata
 - **Batch episode fetching** — multiple sources in parallel
+- **Direct embed providers** (megavid, anixo) — bypass Cloudflare
 - **Quality fallback** — auto 1080p → 720p → 360p
 - **Subtitle extraction** — expose subtitle URLs
 
@@ -233,14 +253,14 @@ flowchart TD
 
 | Feature | Description | Status |
 |:---|:---|:---:|
-| 🎬 46 API Endpoints | Complete anime data coverage | ✅ |
+| 🎬 49 API Endpoints | Complete anime data coverage | ✅ |
 | 🔍 Full-Text Search | Keyword search with pagination | ✅ |
 | 💡 Search Suggestions | Fast autocomplete | ✅ |
 | 🎯 Advanced Filtering | Genre, year, season, format, sort | ✅ |
 | 🎭 Characters + Voice Actors | Full character data from AniList | ✅ |
 | 🔗 Relations & Recommendations | Related anime discovery | ✅ |
 | ⏭️ Skip Timestamps | OP/ED skip data | ✅ |
-| 📡 12 Streaming Providers | M3U8 streaming sources | ✅ |
+| 📡 14 Streaming Providers | M3U8 streaming sources | ✅ |
 | 🔄 Smart Caching | In-memory Map with TTL | ✅ |
 | 🚀 One-Click Deploy | Vercel button deployment | ✅ |
 | 🏗️ Express Mode | Standalone server with `npm start` | ✅ |
@@ -264,6 +284,13 @@ flowchart TD
 | 📺 **Miruro** | `miruro.ru` | Mirror domain |
 | 📺 **Miruro** | `miruro.bz` | Mirror domain |
 | 📺 **Miruro** | `miruro.tv` | Mirror domain |
+
+### Direct Embed Sources (no scraping)
+
+| Source | Domain | Data |
+|:---|:---|:---|
+| 🎬 **Megavid** | `megavid.buzz` | Direct video embed URLs |
+| 🎬 **AniXo** | `anixo.buzz` | Direct video embed URLs (CORS-friendly) |
 
 ### 🎬 Streaming Providers
 
@@ -365,7 +392,7 @@ MiruroAPI/
 │   │   └── 📄 cache.js                     #       💾 In-memory cache with TTL
 │   │
 │   └── 📂 routes/                          #    🛤️ Express routes
-│       └── 📄 apiRoutes.js                 #       🌐 Main API routes (46 endpoints)
+│       └── 📄 apiRoutes.js                 #       🌐 Main API routes (49 endpoints)
 │
 ├── 📄 server.js                            # 🚀 Express server entry point
 ├── 📄 package.json                         # 📦 Dependencies & scripts
@@ -536,14 +563,15 @@ console.log(resp.data);
   "success": true,
   "results": {
     "status": "healthy",
-    "version": "2.3.2",
+    "version": "2.3.3",
     "uptime": "0h 0m 34s",
     "uptimeSeconds": 34,
     "timestamp": "2026-06-09T09:55:00.884Z",
     "node": "v24.14.1",
     "memory": { "used": "13MB", "total": "15MB" },
-    "endpoints": 46,
-    "providers": ["kiwi","pewe","bee","bonk","bun","ally","nun","twin","cog","moo","hop","telli"]
+    "endpoints": 49,
+    "providers": ["kiwi","pewe","bee","bonk","bun","ally","nun","twin","cog","moo","hop","telli"],
+    "embedProviders": ["megavid", "anixo"]
   }
 }
 ```
@@ -583,7 +611,7 @@ console.log(resp.data);
     "uptime": "0h 0m 34s",
     "requests": { "total": 156, "errors": 3, "successRate": "98.1%" },
     "cache": { "size": 12, "maxSize": 100, "ttl": "1 min" },
-    "endpoints": 46,
+    "endpoints": 49,
     "timestamp": "2026-06-09T09:55:00.884Z"
   }
 }
@@ -1693,7 +1721,13 @@ Yes! Use <code>npm start</code> to run the Express server on any VPS, Docker con
 <details>
 <summary><b>🎬 Which streaming providers are available?</b></summary>
 <br/>
-12 providers: kiwi, pewe, bee, bonk, bun, ally, nun, twin, cog, moo, hop, telli. Not all anime are available on every provider.
+12 pipe providers: kiwi, pewe, bee, bonk, bun, ally, nun, twin, cog, moo, hop, telli + 2 direct embed providers: megavid, anixo. Not all anime are available on every provider.
+</details>
+
+<details>
+<summary><b>🎬 How do I use the direct embed providers?</b></summary>
+<br/>
+Use <code>/api/embed/:anilistId/:episode</code> to get iframe-ready URLs from megavid.buzz and anixo.buzZ. These bypass Cloudflare entirely — no scraping needed. Example: <code>GET /api/embed/20/1?lang=sub</code> returns URLs you can embed directly in an iframe.
 </details>
 
 <details>
@@ -1731,14 +1765,14 @@ Use <code>/api/pipe-health</code> to check which pipe methods are working. It sh
 
 ### ✅ Completed
 
-- [x] 🎬 46 API endpoints covering all data
+- [x] 🎬 49 API endpoints covering all data
 - [x] 🔍 Full-text search with pagination
 - [x] 💡 Search suggestions for autocomplete
 - [x] 🎯 Advanced filtering (genre, year, season, format, sort)
 - [x] 🎭 Characters + voice actors from AniList
 - [x] 🔗 Relations and recommendations
 - [x] ⏭️ Skip timestamps (OP/ED)
-- [x] 📡 12 streaming providers with M3U8 URLs
+- [x] 📡 14 streaming providers with M3U8 URLs
 - [x] 🔄 Smart caching with configurable TTL
 - [x] 🚀 One-click Vercel deployment
 - [x] 🐳 Docker support
@@ -1746,6 +1780,8 @@ Use <code>/api/pipe-health</code> to check which pipe methods are working. It sh
 - [x] 📖 Comprehensive documentation with real API data
 - [x] 🔒 Security hardening (XOR keys in env vars, CORS restriction, input sanitization)
 - [x] 🛡️ Security headers at CDN level
+- [x] 🎬 49 API endpoints with direct embed providers
+- [x] 🎬 Direct embed providers (megavid, anixo) bypass Cloudflare
 
 ---
 

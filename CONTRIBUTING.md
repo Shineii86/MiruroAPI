@@ -30,7 +30,7 @@ npm run dev
 MiruroAPI/
 ├── server.js              # Express entry point
 ├── src/
-│   ├── helpers/           # AniList, pipe, cache integrations
+│   ├── helpers/           # AniList, pipe + embed providers, cache integrations
 │   └── routes/            # Express routes
 ├── public/                # Static files (landing page, Swagger UI)
 └── docs/                  # API documentation
@@ -42,6 +42,9 @@ MiruroAPI/
 2. Add route in `src/routes/apiRoutes.js`
 3. Update `docs/endpoints.md` with documentation
 4. Test with `curl http://localhost:3000/api/your-endpoint`
+
+> For streaming endpoints, consider adding direct embed providers (megavid, anixo) 
+> in `src/helpers/pipe.js` — these bypass Cloudflare and work from any environment.
 
 ## Code Style
 

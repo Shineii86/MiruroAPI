@@ -1,6 +1,6 @@
 # API Endpoints Reference
 
-Complete documentation for all 45 MiruroAPI v2.3.0 endpoints.
+Complete documentation for all 49 MiruroAPI v2.3.3 endpoints.
 
 ---
 
@@ -56,6 +56,11 @@ Complete documentation for all 45 MiruroAPI v2.3.0 endpoints.
 - [Stream (Quality Fallback)](#stream-quality-fallback)
 - [Download URL](#download-url)
 - [Watch (Streaming)](#watch-streaming)
+
+### Direct Embed (no scraping)
+- [Embed All Providers](#embed-all-providers)
+- [Embed Specific Provider](#embed-specific-provider)
+- [Embed Providers List](#embed-providers-list)
 
 ### Utility
 - [Compare](#compare)
@@ -573,6 +578,50 @@ GET /api/timeline/20605
 ```
 
 Anime release timeline with prequels, sequels, spin-offs.
+
+---
+
+## Embed All Providers
+
+```
+GET /api/embed/:anilistId/:episode
+```
+
+Returns iframe-ready embed URLs for all available providers. No scraping required.
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| anilistId | int | required | AniList anime ID |
+| episode | int | required | Episode number |
+| lang | string | sub | Language: `sub` or `dub` |
+| malId | int | optional | MAL ID (uses MAL-based URLs if provided) |
+
+---
+
+## Embed Specific Provider
+
+```
+GET /api/embed/:anilistId/:episode/:provider
+```
+
+Returns embed URL for a specific provider.
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| anilistId | int | required | AniList anime ID |
+| episode | int | required | Episode number |
+| provider | string | required | Provider ID: `megavid` or `anixo` |
+| lang | string | sub | Language: `sub` or `dub` |
+
+---
+
+## Embed Providers List
+
+```
+GET /api/embed-providers
+```
+
+Lists all available embed providers with example URLs.
 
 ---
 
