@@ -113,7 +113,7 @@ const methodDirect = async (encodedReq) => {
     try {
       const res = await axios.get(`${origin}${PIPE_PATH}?e=${encodedReq}`, {
         headers: HEADERS,
-        timeout: 20000,
+        timeout: 15000,
         maxRedirects: 5,
       });
 
@@ -126,6 +126,10 @@ const methodDirect = async (encodedReq) => {
       lastError = e;
       const status = e.response?.status;
 
+      if (status === 403 || status === 444) {
+        throw new Error(`Cloudflare is blocking requests to ${origin} (HTTP ${status}). Configure SCRAPER_API_KEY or FLARESOLVERR_URL for fallback.`);
+      }
+
       if (
         status &&
         status >= 400 &&
@@ -136,13 +140,17 @@ const methodDirect = async (encodedReq) => {
         throw new Error(`Pipe request failed with status ${status}`);
       }
 
+      if (e.code === "ECONNABORTED" || e.code === "ETIMEDOUT") {
+        lastError = new Error(`Request to ${origin} timed out after 15s`);
+      }
+
       if (attempt < maxRetries - 1) {
         const delay = Math.pow(2, attempt) * 1000;
         await new Promise((r) => setTimeout(r, delay));
       }
     }
   }
-  throw lastError || new Error("Direct request failed after all retries");
+  throw lastError || new Error("Direct request failed after all retries. The streaming provider may be temporarily unavailable.");
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -220,10 +228,13 @@ const pipeRequest = async (path, query) => {
   const encodedReq = encodePipeRequest(payload);
 
   const errors = [];
+  const availableMethods = METHODS.filter((m) => !m.requires || m.requires());
 
-  for (const method of METHODS) {
-    if (method.requires && !method.requires()) continue;
+  if (availableMethods.length === 0) {
+    throw new Error("No streaming methods configured. Set SCRAPER_API_KEY or FLARESOLVERR_URL in your .env file to enable fallback methods.");
+  }
 
+  for (const method of availableMethods) {
     try {
       const result = await method.fn(encodedReq);
       return result.data;
@@ -232,8 +243,14 @@ const pipeRequest = async (path, query) => {
     }
   }
 
+  const isCloudflare = errors.some((e) => e.error.includes("Cloudflare") || e.error.includes("403"));
+  const baseMessage = isCloudflare
+    ? "Cloudflare is blocking all streaming requests"
+    : "All streaming methods failed";
+
   throw new Error(
-    `All pipe methods failed: ${errors.map((e) => `${e.method}(${e.error})`).join(", ")}`
+    `${baseMessage}: ${errors.map((e) => `${e.method}(${e.error})`).join(", ")}. ` +
+    "Configure SCRAPER_API_KEY or FLARESOLVERR_URL for additional fallback methods."
   );
 };
 

@@ -678,7 +678,12 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
 
       jsonResponse(res, result);
     } catch (err) {
-      jsonError(res, err.message);
+      const isBlocked = err.message.includes("Cloudflare") || err.message.includes("blocked") || err.message.includes("403");
+      const status = isBlocked ? 503 : err.message.includes("not found") ? 404 : 500;
+      const message = isBlocked
+        ? "Streaming provider is blocking requests (Cloudflare protection). Try again later or configure SCRAPER_API_KEY / FLARESOLVERR_URL."
+        : err.message;
+      jsonError(res, message, status);
     }
   });
 
@@ -699,7 +704,7 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
     }
   });
 
-  // ---- FEATURE: Streaming sources (detailed/manual endpoint) ----
+  // ---- FEATURE: Streaming sources (query-based endpoint) ----
   router.get("/sources", async (req, res) => {
     try {
       const { episodeId, provider, anilistId, category = "sub" } = req.query;
@@ -710,7 +715,27 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
       const result = await pipe.getSources(episodeId, provider, parseInt(anilistId), category);
       jsonResponse(res, result);
     } catch (err) {
-      jsonError(res, err.message);
+      const status = err.message.includes("Cloudflare") || err.message.includes("blocked")
+        ? 503 : err.message.includes("not found") ? 404 : 500;
+      jsonError(res, err.message, status);
+    }
+  });
+
+  // ---- FEATURE: Streaming sources by episode ID (path-based endpoint) ----
+  router.get("/sources/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { provider, anilistId, category = "sub" } = req.query;
+      if (!provider || !anilistId) {
+        return jsonError(res, "provider and anilistId query params are required", 400);
+      }
+
+      const result = await pipe.getSources(id, provider, parseInt(anilistId), category);
+      jsonResponse(res, result);
+    } catch (err) {
+      const status = err.message.includes("Cloudflare") || err.message.includes("blocked")
+        ? 503 : err.message.includes("not found") ? 404 : 500;
+      jsonError(res, err.message, status);
     }
   });
 
@@ -735,7 +760,12 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
         skipTimes,
       });
     } catch (err) {
-      jsonError(res, err.message);
+      const isBlocked = err.message.includes("Cloudflare") || err.message.includes("blocked") || err.message.includes("403");
+      const status = isBlocked ? 503 : err.message.includes("not found") ? 404 : 500;
+      const message = isBlocked
+        ? "Streaming provider is blocking requests (Cloudflare protection). Try again later or configure SCRAPER_API_KEY / FLARESOLVERR_URL."
+        : err.message;
+      jsonError(res, message, status);
     }
   });
 
@@ -750,7 +780,12 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
       const result = await pipe.getDownloadUrl(provider, parseInt(anilistId), category, slug);
       jsonResponse(res, result);
     } catch (err) {
-      jsonError(res, err.message);
+      const isBlocked = err.message.includes("Cloudflare") || err.message.includes("blocked") || err.message.includes("403");
+      const status = isBlocked ? 503 : err.message.includes("not found") ? 404 : 500;
+      const message = isBlocked
+        ? "Streaming provider is blocking requests (Cloudflare protection). Try again later or configure SCRAPER_API_KEY / FLARESOLVERR_URL."
+        : err.message;
+      jsonError(res, message, status);
     }
   });
 
@@ -768,7 +803,12 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
         skipTimes,
       });
     } catch (err) {
-      jsonError(res, err.message);
+      const isBlocked = err.message.includes("Cloudflare") || err.message.includes("blocked") || err.message.includes("403");
+      const status = isBlocked ? 503 : err.message.includes("not found") ? 404 : 500;
+      const message = isBlocked
+        ? "Streaming provider is blocking requests (Cloudflare protection). Try again later or configure SCRAPER_API_KEY / FLARESOLVERR_URL."
+        : err.message;
+      jsonError(res, message, status);
     }
   });
 
@@ -1124,7 +1164,7 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
       success: true,
       results: {
         status: "healthy",
-        version: "2.3.2",
+        version: "2.3.3",
         uptime: `${hours}h ${minutes}m ${seconds}s`,
         uptimeSeconds: uptime,
         timestamp: new Date().toISOString(),
@@ -1154,6 +1194,9 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
       const failed = Object.entries(results).filter(
         ([, v]) => v.status === "failed"
       );
+      const skipped = Object.entries(results).filter(
+        ([, v]) => v.status === "skipped"
+      );
 
       res.json({
         success: true,
@@ -1161,10 +1204,11 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
           methods: results,
           working: working.length,
           failed: failed.length,
+          skipped: skipped.length,
           total: Object.keys(results).length,
           recommendation:
             working.length === 0
-              ? "All methods blocked. Check Cloudflare status or add SCRAPER_API_KEY / FLARESOLVERR_URL."
+              ? "All methods blocked or unconfigured. Set SCRAPER_API_KEY or FLARESOLVERR_URL in .env to enable fallback methods. See .env.example for details."
               : working[0]
                 ? `Preferred: ${working[0][0]} (${working[0][1].latency})`
                 : "No methods available",
@@ -1172,7 +1216,7 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
         },
       });
     } catch (err) {
-      jsonError(res, err.message);
+      jsonError(res, err.message, 500);
     }
   });
 
@@ -1211,7 +1255,7 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
       info: {
         title: "MiruroAPI",
         description: "Free REST API for anime streaming data — AniList GraphQL + Miruro streaming providers",
-        version: "2.3.2",
+        version: "2.3.3",
         contact: { name: "Shineii86", url: "https://github.com/Shineii86/MiruroAPI" },
       },
       servers: [
@@ -1250,7 +1294,8 @@ const createApiRoutes = (jsonResponse, jsonError, startTime) => {
         "/anime/{id}/recommendations": { get: { summary: "Recommendations", tags: ["Anime Details"] } },
         "/episodes/{id}": { get: { summary: "Episode list", tags: ["Streaming & Downloading"] } },
         "/episodes/{id}/batch": { get: { summary: "Batch episode sources", tags: ["Streaming & Downloading"] } },
-        "/sources": { get: { summary: "Streaming sources (detailed)", tags: ["Streaming & Downloading"] } },
+        "/sources": { get: { summary: "Streaming sources (query-based)", tags: ["Streaming & Downloading"] } },
+        "/sources/{id}": { get: { summary: "Streaming sources by episode ID", tags: ["Streaming & Downloading"] } },
         "/stream": { get: { summary: "Stream with quality fallback", tags: ["Streaming & Downloading"] } },
         "/download": { get: { summary: "Download URL", tags: ["Streaming & Downloading"] } },
         "/watch/{provider}/{anilistId}/{category}/{slug}": { get: { summary: "Streaming sources (simple)", tags: ["Streaming & Downloading"] } },

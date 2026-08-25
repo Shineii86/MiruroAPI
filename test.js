@@ -82,6 +82,8 @@ const tests = [
   // ---- FEATURE: Streaming endpoints ----
   { name: "Episodes", url: "/episodes/20" },
   { name: "Batch Episodes", url: "/episodes/20/batch?provider=kiwi&category=sub&slugs=animepahe-1,animepahe-2" },
+  { name: "Sources (query)", url: "/sources?episodeId=test&provider=kiwi&anilistId=20" },
+  { name: "Sources (path)", url: "/sources/test?provider=kiwi&anilistId=20" },
   { name: "Stream", url: "/stream?provider=kiwi&anilistId=20&category=sub&slug=animepahe-1" },
   { name: "Download", url: "/download?provider=kiwi&anilistId=20&category=sub&slug=animepahe-1" },
   { name: "Watch", url: "/watch/kiwi/20/sub/animepahe-1" },
@@ -152,7 +154,7 @@ async function runTest(test) {
  *   API_URL=http://localhost:3000/api node test.js  # Run against local
  */
 async function runAll() {
-  console.log(`\n🧪 MiruroAPI v2.3.0 — Running ${tests.length} tests...\n`);
+  console.log(`\n🧪 MiruroAPI v2.3.3 — Running ${tests.length} tests...\n`);
 
   // NOTE: Sequential execution — parallel requests would hit rate limiter
   for (const test of tests) {

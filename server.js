@@ -101,10 +101,12 @@ app.use((req, res, next) => {
       return res.status(403).json({ success: false, message: "Origin not allowed" });
     }
   } else {
+    // Default: allow all origins for public API usage by anime frontends
     res.setHeader("Access-Control-Allow-Origin", origin || "*");
   }
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-No-Compression");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-No-Compression, Authorization");
+  res.setHeader("Access-Control-Expose-Headers", "X-RateLimit-Limit, X-RateLimit-Remaining");
   res.setHeader("Access-Control-Max-Age", "86400");
 
   if (req.method === "OPTIONS") {
@@ -301,7 +303,7 @@ app.use((req, res) => {
 
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`[${new Date().toISOString()}] MiruroAPI v2.3.2 listening at ${PORT}`);
+    console.log(`[${new Date().toISOString()}] MiruroAPI v2.3.3 listening at ${PORT}`);
   });
 }
 

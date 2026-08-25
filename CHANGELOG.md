@@ -1,5 +1,59 @@
 # Changelog
 
+## v2.3.3
+### Issue #3 Fix — API Stability, Error Handling & New Endpoints
+
+#### Fixed: Streaming Endpoint Error Handling
+- **Cloudflare detection** — Streaming endpoints (`/episodes`, `/stream`, `/watch`, `/download`, `/sources`) now return proper `503` status codes with descriptive error messages when Cloudflare blocks requests
+- **Timeout handling** — Direct pipe requests now have 15s timeout with exponential backoff retry (was 20s with less informative errors)
+- **Better error messages** — All streaming failures now explain that SCRAPER_API_KEY or FLARESOLVERR_URL can be configured as fallback
+
+#### New: `/api/sources/:id` Endpoint
+- Added path-based streaming sources endpoint: `GET /api/sources/:id?provider=kiwi&anilistId=20&category=sub`
+- Complements the existing query-based `/api/sources` endpoint
+- Returns streaming sources with subtitles, streams, and download info
+
+#### Improved: CORS Configuration
+- Added `Authorization` header to CORS allowed headers
+- Added `X-RateLimit-Limit` and `X-RateLimit-Remaining` to exposed headers
+- Default behavior allows all origins for public API usage by anime frontends
+
+#### Improved: Pipe Health Check
+- `/api/pipe-health` now reports skipped (unconfigured) methods separately
+- Better recommendation messages when no methods are available
+- Includes setup instructions in error responses
+
+#### Changed: Version Bump
+- All version references updated from `2.3.2` to `2.3.3`
+
+#### Files Changed
+- `src/routes/apiRoutes.js` — Added `/sources/:id` route, improved error handling for all streaming endpoints, updated OpenAPI spec
+- `src/helpers/pipe.js` — Better timeout handling, Cloudflare detection, informative error messages
+- `server.js` — Updated CORS headers, version bump
+- `package.json` — Version bump to 2.3.3
+- `test.js` — Added test for `/sources/:id`, version bump
+- `CHANGELOG.md` — This entry
+
+#### Issue #3 Checklist
+- [x] Fix `/api/search` — Working (AniList GraphQL)
+- [x] Fix `/api/info/:id` — Working (AniList GraphQL)
+- [x] Fix `/api/trending` — Working (AniList GraphQL)
+- [x] Fix `/api/filter` — Working (AniList GraphQL)
+- [x] Fix `/api/episodes/:id` — Improved error handling, proper 503 on Cloudflare blocks
+- [x] Fix `/api/sources` — Added `/api/sources/:id` path-based endpoint
+- [x] Fix `/api/watch` — Improved error handling with Cloudflare detection
+- [x] Consistent JSON responses — All endpoints return `{ success, results/message }`
+- [x] Proper 400/404 responses — Input validation for invalid IDs and missing params
+- [x] Error handling — Timeouts, Cloudflare blocks, upstream failures handled gracefully
+- [x] CORS properly configured — Allows all origins by default for frontend use
+
+#### Notes
+- AniList-based endpoints (search, info, trending, filter, etc.) are fully functional
+- Streaming endpoints depend on miruro.to pipe availability — Cloudflare may still block from datacenters
+- For reliable streaming, deploy on Cloudflare Workers (worker.js) or configure SCRAPER_API_KEY/FLARESOLVERR_URL
+
+---
+
 ## v2.3.2
 ### Cloudflare Worker Implementation — Issue #2 Fix
 
